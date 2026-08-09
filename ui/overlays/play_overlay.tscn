@@ -1,0 +1,159 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/play_overlay.gd" id="1"]
+
+[node name="PlayOverlay" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1")
+
+[node name="Dim" type="ColorRect" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="Center" type="CenterContainer" parent="."]
+mouse_filter = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(460, 0)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 18
+
+[node name="VBox" type="VBoxContainer" parent="Center/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Header" type="HBoxContainer" parent="Center/Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Center/Panel/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Play"
+
+[node name="CloseButton" type="Button" parent="Center/Panel/Margin/VBox/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "✕"
+
+[node name="NameGroup" type="VBoxContainer" parent="Center/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Center/Panel/Margin/VBox/NameGroup"]
+layout_mode = 2
+text = "Display Name"
+
+[node name="NameEdit" type="LineEdit" parent="Center/Panel/Margin/VBox/NameGroup"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Your name"
+
+[node name="Tabs" type="TabContainer" parent="Center/Panel/Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 210)
+layout_mode = 2
+
+[node name="Online" type="VBoxContainer" parent="Center/Panel/Margin/VBox/Tabs"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SteamNote" type="Label" parent="Center/Panel/Margin/VBox/Tabs/Online"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.961, 0.62, 0.298, 1)
+autowrap_mode = 3
+text = "Steam is offline."
+
+[node name="HostSteamButton" type="Button" parent="Center/Panel/Margin/VBox/Tabs/Online"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"AccentButton"
+text = "Host Steam Lobby"
+
+[node name="Sep" type="HSeparator" parent="Center/Panel/Margin/VBox/Tabs/Online"]
+layout_mode = 2
+
+[node name="JoinLabel" type="Label" parent="Center/Panel/Margin/VBox/Tabs/Online"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.447, 0.502, 1)
+text = "Join by lobby code"
+
+[node name="JoinRow" type="HBoxContainer" parent="Center/Panel/Margin/VBox/Tabs/Online"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CodeEdit" type="LineEdit" parent="Center/Panel/Margin/VBox/Tabs/Online/JoinRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Lobby code"
+
+[node name="JoinSteamButton" type="Button" parent="Center/Panel/Margin/VBox/Tabs/Online/JoinRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Join"
+
+[node name="Local" type="VBoxContainer" parent="Center/Panel/Margin/VBox/Tabs"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="LanIpLabel" type="Label" parent="Center/Panel/Margin/VBox/Tabs/Local"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.447, 0.502, 1)
+autowrap_mode = 3
+text = "Your LAN IP"
+
+[node name="HostLanButton" type="Button" parent="Center/Panel/Margin/VBox/Tabs/Local"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"AccentButton"
+text = "Host LAN Server"
+
+[node name="Sep" type="HSeparator" parent="Center/Panel/Margin/VBox/Tabs/Local"]
+layout_mode = 2
+
+[node name="JoinLabel" type="Label" parent="Center/Panel/Margin/VBox/Tabs/Local"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.447, 0.502, 1)
+text = "Join by IP address"
+
+[node name="JoinRow" type="HBoxContainer" parent="Center/Panel/Margin/VBox/Tabs/Local"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="IpEdit" type="LineEdit" parent="Center/Panel/Margin/VBox/Tabs/Local/JoinRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Host IP address"
+
+[node name="JoinLanButton" type="Button" parent="Center/Panel/Margin/VBox/Tabs/Local/JoinRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Join"
+
+[node name="StatusLabel" type="Label" parent="Center/Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.961, 0.62, 0.298, 1)
