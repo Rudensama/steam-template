@@ -168,12 +168,31 @@ func join_lan(ip: String, port: int = DEFAULT_PORT) -> void:
 	# Registration happens on connected_to_server.
 	lobby_ready.emit()
 
-## Best-effort local IPv4 for showing the host address on the LAN.
+## Best-effort local IPv4 for showing the host address on the LAN. Prefers a
+## real private-LAN address (192.168/10/172.16-31) so a VirtualBox/VMware/VPN
+## adapter doesn't get picked ahead of the actual network card — a common cause
+## of "my friend can't connect". Falls back to any non-loopback IPv4, then
+## localhost.
 func get_local_ip() -> String:
-	for addr in IP.get_local_addresses():
-		if addr.count(".") == 3 and not addr.begins_with("127."):
+	var fallback: String = ""
+	for addr: String in IP.get_local_addresses():
+		if addr.count(".") != 3 or addr.begins_with("127."):
+			continue   # Skip IPv6 and loopback.
+		if _is_private_ipv4(addr):
 			return addr
-	return "127.0.0.1"
+		if fallback == "":
+			fallback = addr
+	return fallback if fallback != "" else "127.0.0.1"
+
+## True for the RFC 1918 private ranges used by home/office LANs.
+func _is_private_ipv4(addr: String) -> bool:
+	if addr.begins_with("192.168.") or addr.begins_with("10."):
+		return true
+	# 172.16.0.0 – 172.31.255.255
+	if addr.begins_with("172."):
+		var second: int = addr.split(".")[1].to_int()
+		return second >= 16 and second <= 31
+	return false
 
 # --- Leaving ---------------------------------------------------------------
 

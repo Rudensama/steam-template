@@ -2,3 +2,6 @@
 .godot/
 /android/
 build/
+
+# Voice-debug logs (written next to project.godot when VoiceManager.debug_voice is on)
+logs/

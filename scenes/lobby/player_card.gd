@@ -136,40 +136,25 @@ func _load_avatar(info: Dictionary) -> void:
 
 	var sid: int = info.get("steam_id", 0)
 	if sid > 0 and SteamManager.is_online():
-		Steam.avatar_loaded.connect(_on_avatar_loaded)
-		Steam.getPlayerAvatar(Steam.AVATAR_MEDIUM, sid)
 		_pending_avatar_sid = sid
+		# Shared cache: returns the texture now if ready, else fires avatar_ready.
+		var tex: Texture2D = SteamManager.request_avatar(sid)
+		if tex != null:
+			_show_avatar(tex)
+		else:
+			SteamManager.avatar_ready.connect(_on_avatar_ready)
 
 func _exit_tree() -> void:
-	if Steam.avatar_loaded.is_connected(_on_avatar_loaded):
-		Steam.avatar_loaded.disconnect(_on_avatar_loaded)
+	if SteamManager.avatar_ready.is_connected(_on_avatar_ready):
+		SteamManager.avatar_ready.disconnect(_on_avatar_ready)
 
-func _on_avatar_loaded(user_id: int, avatar_size: int, buffer: PackedByteArray) -> void:
+func _on_avatar_ready(user_id: int, texture: Texture2D) -> void:
 	if user_id != _pending_avatar_sid:
 		return
-	Steam.avatar_loaded.disconnect(_on_avatar_loaded)
-	if avatar_size <= 0 or buffer.is_empty():
-		return
-	var image: Image = Image.create_from_data(avatar_size, avatar_size, false, Image.FORMAT_RGBA8, buffer)
-	_round_image(image)
-	_avatar_tex.texture = ImageTexture.create_from_image(image)
+	SteamManager.avatar_ready.disconnect(_on_avatar_ready)
+	_show_avatar(texture)
+
+func _show_avatar(texture: Texture2D) -> void:
+	_avatar_tex.texture = texture
 	_avatar_tex.visible = true
 	_avatar_initial.visible = false
-
-## Zero the alpha outside the inscribed circle so the square Steam avatar renders
-## as a round icon (the colored Ring sits on top of the edge).
-static func _round_image(image: Image) -> void:
-	var w: int = image.get_width()
-	var h: int = image.get_height()
-	var cx: float = w / 2.0
-	var cy: float = h / 2.0
-	var r: float = minf(cx, cy)
-	var r2: float = r * r
-	for y: int in h:
-		for x: int in w:
-			var dx: float = (x + 0.5) - cx
-			var dy: float = (y + 0.5) - cy
-			if dx * dx + dy * dy > r2:
-				var c: Color = image.get_pixel(x, y)
-				c.a = 0.0
-				image.set_pixel(x, y, c)

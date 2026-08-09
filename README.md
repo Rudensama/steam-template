@@ -129,3 +129,28 @@ Steam P2P requires **two different Steam accounts**, each running the game
   Primary/destructive buttons use the `AccentButton` / `DangerButton` variations.
 - **Max players / port:** `MAX_PLAYERS` and `DEFAULT_PORT` in
   `autoload/network_manager.gd`.
+
+---
+
+## Security notes (read before shipping)
+
+This template optimizes for a clear, small codebase over an anti-cheat-hardened
+one. A few things to know before you build something competitive on it:
+
+- **Chat is peer-broadcast, not host-validated.** `_recv_chat` is an
+  `any_peer` RPC, so each client sends its own name/color/Steam ID with every
+  message. A modified client could therefore **spoof another player's name or
+  send messages as someone else**. For production, route chat through the host
+  (client → host RPC, host stamps the *authoritative* identity from
+  `players[sender_id]`, then rebroadcasts).
+- **Self-reported identity on join.** `_register_player` trusts the `name` and
+  `steam_id` a joining client sends. Names are length-clamped
+  (`MAX_NAME_LEN`) and chat is clamped (`MAX_CHAT_LEN`) host-side, but the
+  Steam ID itself is not verified — validate it against the Steam lobby
+  membership if it matters to your game.
+- **Game-state RPCs are up to you.** The roster (ready/color/kick) is already
+  host-authoritative; any gameplay `@rpc`s you add should validate the sender
+  and the action on the host too, rather than trusting client input.
+- **Lobbies are `FRIENDS_ONLY`** so they don't appear in public matchmaking;
+  join is by code or Steam invite. Switch to `LOBBY_TYPE_PUBLIC` in
+  `host_steam()` only if you want open discovery.

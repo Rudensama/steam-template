@@ -49,6 +49,16 @@ func _load() -> void:
 	for key: String in _defaults:
 		if cfg.has_section_key(SECTION, key):
 			_data[key] = cfg.get_value(SECTION, key)
+	_sanitize()
+
+## Guard against a corrupt or hand-edited config: keep 0..1 sliders in range and
+## the mic mode a valid enum, so one bad value can't break audio or the UI.
+func _sanitize() -> void:
+	for key: String in ["master_volume", "voice_volume", "mic_threshold"]:
+		_data[key] = clampf(float(_data[key]), 0.0, 1.0)
+	var mode: int = int(_data["mic_mode"])
+	if mode != VoiceManager.MicMode.PUSH_TO_TALK and mode != VoiceManager.MicMode.OPEN_MIC:
+		_data["mic_mode"] = _defaults["mic_mode"]
 
 func _save() -> void:
 	var cfg: ConfigFile = ConfigFile.new()
