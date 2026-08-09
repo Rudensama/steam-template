@@ -44,4 +44,7 @@ func _scroll_to_bottom() -> void:
 	# Wait for the new row to lay out (bubble autowrap height) before scrolling.
 	await get_tree().process_frame
 	await get_tree().process_frame
+	# The lobby may have been torn down during those frames (e.g. left / kicked).
+	if not is_instance_valid(_scroll):
+		return
 	_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)

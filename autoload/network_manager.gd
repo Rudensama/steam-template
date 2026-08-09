@@ -21,6 +21,10 @@ enum Mode { NONE, STEAM, LAN }
 const DEFAULT_PORT: int = 7777
 const MAX_PLAYERS: int = 8
 const PING_INTERVAL: float = 1.0
+## Hard caps on client-supplied strings, enforced host-side / on receipt so a
+## modified client can't flood peers with an oversized name or chat message.
+const MAX_NAME_LEN: int = 32
+const MAX_CHAT_LEN: int = 500
 ## One distinct color per possible player; auto-assigned on join, changeable in the
 ## lobby. Used for chat bubbles and player-card accents. Keep length >= MAX_PLAYERS.
 const PLAYER_COLORS: Array[Color] = [
@@ -82,11 +86,15 @@ func host_steam() -> void:
 	mode = Mode.STEAM
 	is_host = true
 	Steam.lobby_created.connect(_on_lobby_created, CONNECT_ONE_SHOT)
-	Steam.createLobby(Steam.LOBBY_TYPE_PUBLIC, MAX_PLAYERS)
+	# FRIENDS_ONLY keeps join-by-code and Steam invites working while hiding the
+	# lobby from public matchmaking (requestLobbyList) — strangers can't enumerate
+	# and join it. Use LOBBY_TYPE_PUBLIC only if you want open matchmaking.
+	Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY, MAX_PLAYERS)
 
 func _on_lobby_created(result: int, lobby_id: int) -> void:
 	if result != Steam.RESULT_OK:
 		connection_failed.emit("Failed to create Steam lobby (code %d)." % result)
+		_reset()
 		return
 	steam_lobby_id = lobby_id
 	Steam.setLobbyData(lobby_id, "name", "%s's lobby" % get_display_name())
@@ -95,6 +103,9 @@ func _on_lobby_created(result: int, lobby_id: int) -> void:
 	var peer: SteamMultiplayerPeer = SteamMultiplayerPeer.new()
 	if peer.create_host(0) != OK:
 		connection_failed.emit("Failed to create Steam host peer.")
+		# Don't leave the just-created lobby dangling on Steam.
+		Steam.leaveLobby(lobby_id)
+		_reset()
 		return
 	multiplayer.multiplayer_peer = peer
 	_register_self()
@@ -229,7 +240,7 @@ func _register_player(player_name: String, sid: int) -> void:
 	if not is_host:
 		return
 	var id: int = multiplayer.get_remote_sender_id()
-	players[id] = _new_player(player_name, sid, _first_unused_color())
+	players[id] = _new_player(player_name.strip_edges().left(MAX_NAME_LEN), sid, _first_unused_color())
 	_sync_players.rpc(players)
 	player_list_changed.emit()
 	# Catch the newcomer up on messages sent before they joined. The connection is
@@ -406,6 +417,10 @@ func send_chat(text: String) -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func _recv_chat(sender_name: String, text: String, sid: int, peer_id: int, color: int) -> void:
+	# Clamp client-supplied strings on receipt so a modified peer can't flood the
+	# chat log / UI with an oversized name or message.
+	sender_name = sender_name.left(MAX_NAME_LEN)
+	text = text.left(MAX_CHAT_LEN)
 	# The host keeps the log so players who join later can be caught up (pushed to
 	# them from _register_player).
 	if is_host:
